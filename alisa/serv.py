@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from operator import le
 from flask import Flask, request
 from pymongo import MongoClient
 import time
@@ -101,10 +102,9 @@ def text_search(text, lst, current_Lst):
         if text.lower() == 'расскажи подробнее' or text.lower() == 'расскажи поподробнее':
             if len(current_Lst) == 1:
                 for row in lst:
-                    print(current_Lst[0])
-                    print(row["title"])
+                    
                     if current_Lst[0].lower() in row["title"].lower():
-                        print(row)
+                        
                         return {
                         'response' : {
                         'text' : 'Категория: ' + row['category'] + '\n' + '\nНазвание: ' + row['title'] + '\n' + '\nОписание: ' + row['desc'] + '\n' + '\nЦена: ' + row['price']+ '\n',
@@ -132,9 +132,12 @@ def text_search(text, lst, current_Lst):
         text = text.split(" ")
         print(text)         
         for i in text:
-            print('Ход')
+            print('Ход')            
             if not current_Lst: 
-                
+                if len(i) > 6:
+                    i = i[0:-2]
+                elif 3 < len(i) <= 6:
+                    i = i[0:-1]
                 lst_2 = []            
                 for row in lst:
                     if i in row["title"].lower():
@@ -148,12 +151,15 @@ def text_search(text, lst, current_Lst):
                                             
                 
             else: 
+                if len(i) > 6:
+                    i = i[0:-2]
+                elif 3 < len(i) <= 6:
+                    i = i[0:-1]
                 lst_2 = []
-                print(current_Lst)
-                print(len(current_Lst))
+                print(i)
                 for row in current_Lst:
                     if i in row.lower():
-                        print(row)                        
+                                               
                         lst_2.append(row) 
                     if lst_2: 
                         
@@ -161,7 +167,7 @@ def text_search(text, lst, current_Lst):
                        
                                     
         if len(current_Lst) > 14 and len(current_Lst) != 0:     
-            print('123')             
+                        
             result = []
             for i in current_Lst:
                 i = i.split(" ")
@@ -184,7 +190,7 @@ def text_search(text, lst, current_Lst):
             lst = lst_2            
             response_text = {
             'response' : {
-                'text' : '\n'.join(current_Lst),
+                'text' : 'Вот что удалось найти: \n' + '\n'.join(current_Lst),
                 'end_session': False
                 },
                 "application_state": {
@@ -210,13 +216,13 @@ def text_search(text, lst, current_Lst):
 def resp():    
     text = request.json.get('request', {}).get('command')
     current_Lst = request.json.get('state').get('application').get('value')
-    print(current_Lst)
+    
     
     if current_Lst:
 
         response = {
                 'response' : {
-                    'text' : 'Привет. Чтобы что то заказать, просто скажите что, например "Закажи штукатурка". Позиция для заказа должна быть в именительном падеже. \n Чтобы выбрать новый заказ, скажите "Новый заказ". \n Доступные команды: \n Закажи, для заказов \n Расскажи поподробнее, для получения ссылки на заказ (Для работы команды, должна остаться одна позиция в поиске.) \n \n В последнем запросе ' + str(len((current_Lst))) + ' позиций \n Чтобы отобразить список, скажите "Покажи, что есть"',
+                    'text' : 'Привет. Чтобы что то заказать, просто скажите что, например "Закажи штукатурка". \n Чтобы выбрать новый заказ, скажите "Новый заказ". \n Доступные команды: \n Закажи, для заказов \n Расскажи поподробнее, для получения ссылки на заказ (Для работы команды, должна остаться одна позиция в поиске.) \n \n В последнем запросе ' + str(len((current_Lst))) + ' позиций \n Чтобы отобразить список, скажите "Покажи, что есть"',
                     'end_session': False
                     },
                     
@@ -225,7 +231,7 @@ def resp():
     else:
         response = {
                 'response' : {
-                    'text' : 'Привет. Чтобы что то заказать, просто скажите что, например "Закажи штукатурка". Позиция для заказа должна быть в именительном падеже. \n Чтобы выбрать новый заказ, скажите "Новый заказ". \n Доступные команды: \n Закажи, для заказов \n Расскажи поподробнее, для получения ссылки на заказ (Для работы команды, должна остаться одна позиция в поиске.)',
+                    'text' : 'Привет. Чтобы что то заказать, просто скажите что, например "Закажи штукатурка".  \n Чтобы выбрать новый заказ, скажите "Новый заказ". \n Доступные команды: \n Закажи, для заказов \n Расскажи поподробнее, для получения ссылки на заказ (Для работы команды, должна остаться одна позиция в поиске.)',
                     'end_session': False
                     },
                     
