@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from operator import le
+from typing import Counter
 from flask import Flask, request
 from pymongo import MongoClient
 import time
@@ -52,7 +53,11 @@ def text_search(text, lst, current_Lst):
                 'version': '1.0'
             }      
         if text.lower() == 'покажи что есть' or text.lower() == 'покажи, что есть':
-            if len('\n'.join(current_Lst)) >= 1024:
+            result = []
+            for title in current_Lst:
+                result.append(title)
+
+            if len('\n'.join(result)) >= 1024:
                 return {
                 'response' : {
                 'text' : 'Слишком много вариантов, сначала уточните заказ',
@@ -63,7 +68,7 @@ def text_search(text, lst, current_Lst):
             else:
                 return {
                 'response' : {
-                    'text' : '\n'.join(current_Lst),
+                    'text' : '\n'.join(result),
                     'end_session': False
                     },                
                     'version': '1.0'
@@ -102,25 +107,25 @@ def text_search(text, lst, current_Lst):
         if text.lower() == 'расскажи подробнее' or text.lower() == 'расскажи поподробнее':
             if len(current_Lst) == 1:
                 for row in lst:
-                    
-                    if current_Lst[0].lower() in row["title"].lower():
-                        
-                        return {
-                        'response' : {
-                        'text' : 'Категория: ' + row['category'] + '\n' + '\nНазвание: ' + row['title'] + '\n' + '\nОписание: ' + row['desc'] + '\n' + '\nЦена: ' + row['price']+ '\n',
-                        'end_session': False,
-                        "buttons": [
-                        {
-                            "title": "Перейти к товару",
-                            "payload": {},
-                            "url": row['link'],
-                            "hide": True
+                    for title in current_Lst:
+                        if title.lower() in row["title"].lower():
+                            
+                            return {
+                            'response' : {
+                            'text' : 'Категория: ' + row['category'] + '\n' + '\nНазвание: ' + row['title'] + '\n' + '\nОписание: ' + row['desc'] + '\n' + '\nЦена: ' + row['price']+ '\n',
+                            'end_session': False,
+                            "buttons": [
+                            {
+                                "title": "Перейти к товару",
+                                "payload": {},
+                                "url": row['link'],
+                                "hide": True
+                            }
+                            ],     
+                            },   
+                                    
+                            'version': '1.0'
                         }
-                        ],     
-                        },   
-                                
-                        'version': '1.0'
-                }
             else:
                 return {
                 'response' : {
@@ -130,46 +135,332 @@ def text_search(text, lst, current_Lst):
                     'version': '1.0'
                 }    
         text = text.split(" ")
-        print(text)         
+        print(text)
+        counter = 1         
         for i in text:
             print('Ход')            
             if not current_Lst: 
                 if len(i) > 6:
-                    i = i[0:-2]
+                    imod = i[0:-2]
                 elif 3 < len(i) <= 6:
-                    i = i[0:-1]
-                lst_2 = []            
+                    imod = i[0:-1]
+                else:
+                    imod = i
+                lst_2 = {}    
+                result = []        
                 for row in lst:
-                    if i in row["title"].lower():
-                        lst_2.append(row["title"])
+                    if imod in row["title"].lower() or i in row["table2"]:                         
+                        result.append(row["title"])
+                        # lst_2.append([row['title'], row['table2']])
+                        lst_2[row['title']] = row['table2']
+                        # lst_2['table2'] = row['table2']                        
+                        # lst_2.append(row['table2'])
+
                          
                 if lst_2: 
-                    print('done')                        
+                    print('done')            
                     
-                    current_Lst = lst_2 
-                
-                                            
-                
+                    current_Lst = lst_2
+                    # for row in current_Lst:
+                    #     print(row['title'])
+                    
+                    
+                        
+                    diameter = []
+                    lenght = []
+                    slot = []
+                    appointment = []
+                    count = []
+                    base = []
+                    weight = []
+                    ready = []
+                    material = []
+
+                    done1 = 0
+                    done2 = 0
+                    done3 = 0
+                    for title in current_Lst:  
+                        if imod.lower() in 'саморезы' or 'саморез' in title.lower():
+                            if current_Lst[title][1].lower() == 'кровельный':
+                                if 'Количество в упаковке:' in current_Lst[title]:
+                                    count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])
+                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])
+                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])     
+                                appointment.append(current_Lst[title][current_Lst[title].index('Тип:')+1]) 
+                                
+                            else: 
+                                if 'Количество в упаковке:' in current_Lst[title]:
+                                    count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])
+                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])
+                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])        
+                                appointment.append(current_Lst[title][current_Lst[title].index('Назначение:')+1])
+                                slot.append(current_Lst[title][current_Lst[title].index('Тип шлица:')+1])
+                            done1 = 1
+                        
+                        elif imod.lower() in 'штукатурка' or 'штукатур' in title.lower():
+                            if 'Основа:' in current_Lst[title]:
+                                base.append(current_Lst[title][current_Lst[title].index('Основа:')+1])
+                            if 'Вес:' in current_Lst[title]:
+                                weight.append(current_Lst[title][current_Lst[title].index('Вес:')+1])
+                            if 'Готовность:' in current_Lst[title]:
+                                ready.append(current_Lst[title][current_Lst[title].index('Готовность:')+1])
+                            done2 = 1
+                        
+                        elif imod.lower() in 'шпилька' or 'шпиль' in title.lower():
+                            print("Зашел")
+                            if 'Диаметр резьбы:' in current_Lst[title]:
+                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр резьбы:')+1])
+                            if 'Длина:' in current_Lst[title]:
+                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])
+                            if 'Количество в упаковке:' in current_Lst[title]:
+                                count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])     
+                            if 'Материал:' in current_Lst[title]:
+                                material.append(current_Lst[title][current_Lst[title].index('Материал:')+1])    
+                            done3 = 1
+                    if counter == len(text) and done1:
+                        diameter = set(diameter)
+                        lenght = set(lenght)
+                        slot = set(slot)
+                        appointment = set(appointment)
+                        count = set(count)
+                        if len('\n'.join(result)) >= 1024:                               
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Тип шлица: ' + ', '.join(slot) + '\n' + 'Назначение: ' + ', '.join(appointment)+ '\n' + 'Количество в упаковке: ' + ', '.join(count),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }   
+                        else:
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Тип шлица: ' + ', '.join(slot) + '\n' + 'Назначение: ' + ', '.join(appointment)+ '\n' + 'Количество в упаковке: ' + ', '.join(count)+ '\n' + 'Вот что удалось найти: ' + ', '.join(result),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            } 
+                    if counter == len(text) and done2:
+                        base = set(base)
+                        weight = set(weight)
+                        ready = set(ready)
+                        if len('\n'.join(result)) >= 1024:                               
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Основа: ' + ', '.join(base) + '\n' + 'Вес: ' + ', '.join(weight) + '\n' + 'Готовность: ' + ', '.join(ready),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }   
+                        else:
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Основа: ' + ', '.join(base) + '\n' + 'Вес: ' + ', '.join(weight) + '\n' + 'Готовность: ' + ', '.join(ready)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }   
+                    if counter == len(text) and done3:
+                        diameter = set(diameter)
+                        lenght = set(lenght)
+                        count = set(count)
+                        material = set(material)
+                        if len('\n'.join(result)) >= 1024:                               
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Материал: ' + ', '.join(material) + '\n' + 'Количество в упаковке: ' + ', '.join(count),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }   
+                        else:
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Материал: ' + ', '.join(material) + '\n' + 'Количество в упаковке: ' + ', '.join(count)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }  
+                           
             else: 
                 if len(i) > 6:
-                    i = i[0:-2]
+                    imod = i[0:-2]
                 elif 3 < len(i) <= 6:
-                    i = i[0:-1]
-                lst_2 = []
+                    imod = i[0:-1]
+                else:
+                    imod = i
+                lst_2 = {}
+                result = []
                 print(i)
-                for row in current_Lst:
-                    if i in row.lower():
-                                               
-                        lst_2.append(row) 
-                    if lst_2: 
+                for title in current_Lst:
+                    
+                    if imod in title.lower() or i.capitalize() in current_Lst[title]:
+                        lst_2[title] = current_Lst[title]
+                        result.append(title)
+                        # lst_2.append(row[1])
+                if lst_2: 
+                    diameter = []
+                    lenght = []
+                    slot = []
+                    appointment = []
+                    count = []
+                    base = []
+                    weight = []
+                    ready = []
+                    material = []
+
+                    done1 = 0
+                    done2 = 0
+                    done3 = 0
+                    current_Lst = lst_2  
+                    for title in current_Lst: 
+                        if imod.lower() in 'саморезы' or 'саморез' in title.lower():
+                            print("тут")                           
+                            
+                            
+                            if current_Lst[title][1].lower() == 'кровельный':
+                                if 'Количество в упаковке:' in current_Lst[title]:
+                                    count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])
+                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])
+                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])     
+                                appointment.append(current_Lst[title][current_Lst[title].index('Тип:')+1]) 
+                                
+                            else: 
+                                if 'Количество в упаковке:' in current_Lst[title]:
+                                    count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])
+                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])
+                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])        
+                                appointment.append(current_Lst[title][current_Lst[title].index('Назначение:')+1])
+                                slot.append(current_Lst[title][current_Lst[title].index('Тип шлица:')+1])
+                            done1 = 1
+
+                        elif imod.lower() in 'штукатурка' or 'штукатур' in title.lower():
+                            if 'Основа:' in current_Lst[title]:
+                                base.append(current_Lst[title][current_Lst[title].index('Основа:')+1])
+                            if 'Вес:' in current_Lst[title]:
+                                weight.append(current_Lst[title][current_Lst[title].index('Вес:')+1])
+                            if 'Готовность:' in current_Lst[title]:
+                                ready.append(current_Lst[title][current_Lst[title].index('Готовность:')+1])
+                            done2 = 1
                         
-                        current_Lst = lst_2  
+                        elif imod.lower() in 'шпилька' or 'шпиль' in title.lower():
+                            if 'Диаметр резьбы:' in current_Lst[title]:
+                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр резьбы:')+1])
+                            if 'Длина:' in current_Lst[title]:
+                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])
+                            if 'Количество в упаковке:' in current_Lst[title]:
+                                count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])     
+                            if 'Материал:' in current_Lst[title]:
+                                material.append(current_Lst[title][current_Lst[title].index('Материал:')+1])    
+                            done3 = 1
+            
+                    if counter == len(text) and done1:
+                        diameter = set(diameter)
+                        lenght = set(lenght)
+                        slot = set(slot)
+                        appointment = set(appointment)
+                        count = set(count)
+                        if len('\n'.join(result)) >= 1024:                               
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Тип шлица: ' + ', '.join(slot) + '\n' + 'Назначение: ' + ', '.join(appointment)+ '\n' + 'Количество в упаковке: ' + ', '.join(count),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }   
+                        else:
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Тип шлица: ' + ', '.join(slot) + '\n' + 'Назначение: ' + ', '.join(appointment)+ '\n' + 'Количество в упаковке: ' + ', '.join(count)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            } 
+
+                    if counter == len(text) and done2:
+                        base = set(base)
+                        weight = set(weight)
+                        ready = set(ready)
+                        if len('\n'.join(result)) >= 1024:                               
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Основа: ' + ', '.join(base) + '\n' + 'Вес: ' + ', '.join(weight) + '\n' + 'Готовность: ' + ', '.join(ready),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }   
+                        else:
+                            return {
+                            'response' : {
+                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Основа: ' + ', '.join(base) + '\n' + 'Вес: ' + ', '.join(weight) + '\n' + 'Готовность: ' + ', '.join(ready)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }     
+                    if counter == len(text) and done3:
+                            diameter = set(diameter)
+                            lenght = set(lenght)
+                            count = set(count)
+                            material = set(material)
+                            if len('\n'.join(result)) >= 1024:                               
+                                return {
+                                'response' : {
+                                    'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Материал: ' + ', '.join(material) + '\n' + 'Количество в упаковке: ' + ', '.join(count),
+                                    'end_session': False
+                                    },    
+                                    "application_state": {
+                                    "value": current_Lst
+                                    },            
+                                    'version': '1.0'
+                                }   
+                            else:
+                                return {
+                                'response' : {
+                                    'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Материал: ' + ', '.join(material) + '\n' + 'Количество в упаковке: ' + ', '.join(count)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
+                                    'end_session': False
+                                    },    
+                                    "application_state": {
+                                    "value": current_Lst
+                                    },            
+                                    'version': '1.0'
+                                }  
+            counter += 1  
                        
                                     
         if len(current_Lst) > 14 and len(current_Lst) != 0:     
                         
-            result = []
+            result = []            
             for i in current_Lst:
+                print(i)                
                 i = i.split(" ")
                 for j in i:
                     if len(j) > 4:
@@ -188,9 +479,12 @@ def text_search(text, lst, current_Lst):
             return response_text
         if len(current_Lst) < 14 and len(current_Lst) != 0:
             lst = lst_2            
+            result = []
+            for title in current_Lst:
+                result.append(title)
             response_text = {
             'response' : {
-                'text' : 'Вот что удалось найти: \n' + '\n'.join(current_Lst),
+                'text' : 'Вот что удалось найти: \n' + '\n'.join(result),
                 'end_session': False
                 },
                 "application_state": {
