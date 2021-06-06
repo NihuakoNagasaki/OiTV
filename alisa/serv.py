@@ -28,7 +28,7 @@ lst = list(records.find({}))
 def text_search(text, lst, current_Lst):
     word = morph.parse(text)[0].normal_form
     if text:
-        if text.lower() == 'новый заказ' or text.lower() == 'новый запрос':
+        if text.lower() == 'новый заказ' or text.lower() == 'новый запрос' or len(current_Lst) == 1 and text.lower() == 'нет':
             
             return {
             'response' : {
@@ -104,7 +104,7 @@ def text_search(text, lst, current_Lst):
                     },
                     'version': '1.0'
                 }
-        if text.lower() == 'расскажи подробнее' or text.lower() == 'расскажи поподробнее':
+        if text.lower() == 'расскажи подробнее' or text.lower() == 'расскажи поподробнее' or len(current_Lst) == 1 and text.lower() == 'да':
             if len(current_Lst) == 1:
                 for row in lst:
                     for title in current_Lst:
@@ -149,7 +149,7 @@ def text_search(text, lst, current_Lst):
                 lst_2 = {}    
                 result = []        
                 for row in lst:
-                    if imod in row["title"].lower() or i in row["table2"]:                         
+                    if imod in row["title"].lower() or i == row["table2"]:                         
                         result.append(row["title"])
                         # lst_2.append([row['title'], row['table2']])
                         lst_2[row['title']] = row['table2']
@@ -184,15 +184,15 @@ def text_search(text, lst, current_Lst):
                             if current_Lst[title][1].lower() == 'кровельный':
                                 if 'Количество в упаковке:' in current_Lst[title]:
                                     count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])
-                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])
-                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])     
+                                diameter.append(str(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])  + ' x ' + str(current_Lst[title][current_Lst[title].index('Длина:')+1]))
+                                     
                                 appointment.append(current_Lst[title][current_Lst[title].index('Тип:')+1]) 
                                 
                             else: 
                                 if 'Количество в упаковке:' in current_Lst[title]:
                                     count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])
-                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])
-                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])        
+                                diameter.append(str(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])  + ' x ' + str(current_Lst[title][current_Lst[title].index('Длина:')+1]))
+                                         
                                 appointment.append(current_Lst[title][current_Lst[title].index('Назначение:')+1])
                                 slot.append(current_Lst[title][current_Lst[title].index('Тип шлица:')+1])
                             done1 = 1
@@ -206,38 +206,26 @@ def text_search(text, lst, current_Lst):
                                 ready.append(current_Lst[title][current_Lst[title].index('Готовность:')+1])
                             done2 = 1
                         
-                        elif imod.lower() in 'шпилька' or 'шпиль' in title.lower():
-                            print("Зашел")
-                            if 'Диаметр резьбы:' in current_Lst[title]:
-                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр резьбы:')+1])
-                            if 'Длина:' in current_Lst[title]:
-                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])
-                            if 'Количество в упаковке:' in current_Lst[title]:
-                                count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])     
-                            if 'Материал:' in current_Lst[title]:
-                                material.append(current_Lst[title][current_Lst[title].index('Материал:')+1])    
+                        
+                        elif imod.lower() in 'шпаклевка' or 'шпаклев' in title.lower():
+                            if 'Основа:' in current_Lst[title]:
+                                base.append(current_Lst[title][current_Lst[title].index('Основа:')+1])
+                            if 'Вес:' in current_Lst[title]:
+                                weight.append(current_Lst[title][current_Lst[title].index('Вес:')+1])
+                            if 'Готовность:' in current_Lst[title]:
+                                ready.append(current_Lst[title][current_Lst[title].index('Готовность:')+1])     
                             done3 = 1
                     if counter == len(text) and done1:
                         diameter = set(diameter)
-                        lenght = set(lenght)
+                        
                         slot = set(slot)
                         appointment = set(appointment)
                         count = set(count)
-                        if len('\n'.join(result)) >= 1024:                               
+
+                        if len(diameter) > 1:
                             return {
                             'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Тип шлица: ' + ', '.join(slot) + '\n' + 'Назначение: ' + ', '.join(appointment)+ '\n' + 'Количество в упаковке: ' + ', '.join(count),
-                                'end_session': False
-                                },    
-                                "application_state": {
-                                "value": current_Lst
-                                },            
-                                'version': '1.0'
-                            }   
-                        else:
-                            return {
-                            'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Тип шлица: ' + ', '.join(slot) + '\n' + 'Назначение: ' + ', '.join(appointment)+ '\n' + 'Количество в упаковке: ' + ', '.join(count)+ '\n' + 'Вот что удалось найти: ' + ', '.join(result),
+                                'text' : 'Какого размера саморезы вас интересуют? Есть \n' + ', '.join(diameter),
                                 'end_session': False
                                 },    
                                 "application_state": {
@@ -245,41 +233,109 @@ def text_search(text, lst, current_Lst):
                                 },            
                                 'version': '1.0'
                             } 
+                        elif len(slot) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Какой тип шлица нужен? Есть \n' + ', '.join(slot),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }
+                        elif len(appointment) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Какой тип саморезов интересует? Есть \n' + ', '.join(appointment),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }
+                        elif len(count) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Сколько должно быть в упаковке? Есть \n' + ', '.join(count),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }
+                        
                     if counter == len(text) and done2:
                         base = set(base)
                         weight = set(weight)
                         ready = set(ready)
-                        if len('\n'.join(result)) >= 1024:                               
+
+                        if len(base) > 1:
                             return {
                             'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Основа: ' + ', '.join(base) + '\n' + 'Вес: ' + ', '.join(weight) + '\n' + 'Готовность: ' + ', '.join(ready),
+                                'text' : 'Какая основа у штукатурки должна быть? Есть \n' + ', '.join(base),
                                 'end_session': False
                                 },    
                                 "application_state": {
                                 "value": current_Lst
                                 },            
                                 'version': '1.0'
-                            }   
-                        else:
+                            } 
+                        elif len(weight) > 1:
                             return {
                             'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Основа: ' + ', '.join(base) + '\n' + 'Вес: ' + ', '.join(weight) + '\n' + 'Готовность: ' + ', '.join(ready)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
+                                'text' : 'Какой вес упаковки? Есть \n' + ', '.join(weight),
                                 'end_session': False
                                 },    
                                 "application_state": {
                                 "value": current_Lst
                                 },            
                                 'version': '1.0'
-                            }   
+                            }
+                        elif len(ready) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Какая готовность? Есть \n' + ', '.join(ready),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            } 
                     if counter == len(text) and done3:
-                        diameter = set(diameter)
-                        lenght = set(lenght)
-                        count = set(count)
-                        material = set(material)
-                        if len('\n'.join(result)) >= 1024:                               
+                        base = set(base)
+                        weight = set(weight)
+                        ready = set(ready)
+
+                        if len(base) > 1:
                             return {
                             'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Материал: ' + ', '.join(material) + '\n' + 'Количество в упаковке: ' + ', '.join(count),
+                                'text' : 'Какая основа у шпаклевки должна быть? Есть \n' + ', '.join(base),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }
+                        elif len(weight) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Какой вес у упаковки? Есть \n' + ', '.join(weight),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }
+                        elif len(ready) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Какая готовность у смеси? Есть \n' + ', '.join(count),
                                 'end_session': False
                                 },    
                                 "application_state": {
@@ -287,17 +343,6 @@ def text_search(text, lst, current_Lst):
                                 },            
                                 'version': '1.0'
                             }   
-                        else:
-                            return {
-                            'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Материал: ' + ', '.join(material) + '\n' + 'Количество в упаковке: ' + ', '.join(count)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
-                                'end_session': False
-                                },    
-                                "application_state": {
-                                "value": current_Lst
-                                },            
-                                'version': '1.0'
-                            }  
                            
             else: 
                 if len(i) > 6:
@@ -311,7 +356,7 @@ def text_search(text, lst, current_Lst):
                 print(i)
                 for title in current_Lst:
                     
-                    if imod in title.lower() or i.capitalize() in current_Lst[title]:
+                    if imod in title.lower() or i.capitalize() == current_Lst[title]:
                         lst_2[title] = current_Lst[title]
                         result.append(title)
                         # lst_2.append(row[1])
@@ -338,15 +383,15 @@ def text_search(text, lst, current_Lst):
                             if current_Lst[title][1].lower() == 'кровельный':
                                 if 'Количество в упаковке:' in current_Lst[title]:
                                     count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])
-                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])
-                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])     
+                                diameter.append(str(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])  + ' x ' + str(current_Lst[title][current_Lst[title].index('Длина:')+1]))
+                                   
                                 appointment.append(current_Lst[title][current_Lst[title].index('Тип:')+1]) 
                                 
                             else: 
                                 if 'Количество в упаковке:' in current_Lst[title]:
                                     count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])
-                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])
-                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])        
+                                diameter.append(str(current_Lst[title][current_Lst[title].index('Диаметр:') + 1])  + ' x ' + str(current_Lst[title][current_Lst[title].index('Длина:')+1]))
+                                    
                                 appointment.append(current_Lst[title][current_Lst[title].index('Назначение:')+1])
                                 slot.append(current_Lst[title][current_Lst[title].index('Тип шлица:')+1])
                             done1 = 1
@@ -360,15 +405,13 @@ def text_search(text, lst, current_Lst):
                                 ready.append(current_Lst[title][current_Lst[title].index('Готовность:')+1])
                             done2 = 1
                         
-                        elif imod.lower() in 'шпилька' or 'шпиль' in title.lower():
-                            if 'Диаметр резьбы:' in current_Lst[title]:
-                                diameter.append(current_Lst[title][current_Lst[title].index('Диаметр резьбы:')+1])
-                            if 'Длина:' in current_Lst[title]:
-                                lenght.append(current_Lst[title][current_Lst[title].index('Длина:')+1])
-                            if 'Количество в упаковке:' in current_Lst[title]:
-                                count.append(current_Lst[title][current_Lst[title].index('Количество в упаковке:')+1])     
-                            if 'Материал:' in current_Lst[title]:
-                                material.append(current_Lst[title][current_Lst[title].index('Материал:')+1])    
+                        elif imod.lower() in 'шпаклевка' or 'шпаклев' in title.lower():
+                            if 'Основа:' in current_Lst[title]:
+                                base.append(current_Lst[title][current_Lst[title].index('Основа:')+1])
+                            if 'Вес:' in current_Lst[title]:
+                                weight.append(current_Lst[title][current_Lst[title].index('Вес:')+1])
+                            if 'Готовность:' in current_Lst[title]:
+                                ready.append(current_Lst[title][current_Lst[title].index('Готовность:')+1])   
                             done3 = 1
             
                     if counter == len(text) and done1:
@@ -377,21 +420,11 @@ def text_search(text, lst, current_Lst):
                         slot = set(slot)
                         appointment = set(appointment)
                         count = set(count)
-                        if len('\n'.join(result)) >= 1024:                               
+
+                        if len(diameter) > 1:
                             return {
                             'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Тип шлица: ' + ', '.join(slot) + '\n' + 'Назначение: ' + ', '.join(appointment)+ '\n' + 'Количество в упаковке: ' + ', '.join(count),
-                                'end_session': False
-                                },    
-                                "application_state": {
-                                "value": current_Lst
-                                },            
-                                'version': '1.0'
-                            }   
-                        else:
-                            return {
-                            'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Тип шлица: ' + ', '.join(slot) + '\n' + 'Назначение: ' + ', '.join(appointment)+ '\n' + 'Количество в упаковке: ' + ', '.join(count)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
+                                'text' : 'Какого размера саморезы вас интересуют? Есть \n' + ', '.join(diameter),
                                 'end_session': False
                                 },    
                                 "application_state": {
@@ -399,53 +432,110 @@ def text_search(text, lst, current_Lst):
                                 },            
                                 'version': '1.0'
                             } 
-
+                        elif len(slot) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Какой тип шлица нужен? Есть \n' + ', '.join(slot),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }
+                        elif len(appointment) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Какой тип саморезов интересует? Есть \n' + ', '.join(appointment),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }
+                        elif len(count) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Сколько должно быть в упаковке? Есть \n' + ', '.join(count),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }
+                        
                     if counter == len(text) and done2:
                         base = set(base)
                         weight = set(weight)
                         ready = set(ready)
-                        if len('\n'.join(result)) >= 1024:                               
+
+                        if len(base) > 1:
                             return {
                             'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Основа: ' + ', '.join(base) + '\n' + 'Вес: ' + ', '.join(weight) + '\n' + 'Готовность: ' + ', '.join(ready),
+                                'text' : 'Какая основа у штукатурки должна быть? Есть \n' + ', '.join(base),
                                 'end_session': False
                                 },    
                                 "application_state": {
                                 "value": current_Lst
                                 },            
                                 'version': '1.0'
-                            }   
-                        else:
+                            } 
+                        elif len(weight) > 1:
                             return {
                             'response' : {
-                                'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Основа: ' + ', '.join(base) + '\n' + 'Вес: ' + ', '.join(weight) + '\n' + 'Готовность: ' + ', '.join(ready)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
+                                'text' : 'Какой вес упаковки? Есть \n' + ', '.join(weight),
                                 'end_session': False
                                 },    
                                 "application_state": {
                                 "value": current_Lst
                                 },            
                                 'version': '1.0'
-                            }     
+                            }
+                        elif len(ready) > 1:
+                            return {
+                            'response' : {
+                                'text' : 'Какая готовность? Есть \n' + ', '.join(ready),
+                                'end_session': False
+                                },    
+                                "application_state": {
+                                "value": current_Lst
+                                },            
+                                'version': '1.0'
+                            }
+                         
                     if counter == len(text) and done3:
-                            diameter = set(diameter)
-                            lenght = set(lenght)
-                            count = set(count)
-                            material = set(material)
-                            if len('\n'.join(result)) >= 1024:                               
+                            base = set(base)
+                            weight = set(weight)
+                            ready = set(ready)
+
+                            if len(base) > 1:
                                 return {
                                 'response' : {
-                                    'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Материал: ' + ', '.join(material) + '\n' + 'Количество в упаковке: ' + ', '.join(count),
+                                    'text' : 'Какая основа у шпаклевки должна быть? Есть \n' + ', '.join(base),
                                     'end_session': False
                                     },    
                                     "application_state": {
                                     "value": current_Lst
                                     },            
                                     'version': '1.0'
-                                }   
-                            else:
+                                }
+                            elif len(weight) > 1:
                                 return {
                                 'response' : {
-                                    'text' : 'Найдено ' + str(len(current_Lst)) + ' позиций со следующиим вариантами: \n''Диаметр: ' + ', '.join(diameter) + '\n' + 'Длина: ' + ', '.join(lenght) + '\n' + 'Материал: ' + ', '.join(material) + '\n' + 'Количество в упаковке: ' + ', '.join(count)+ '\n' + 'Вот что удалось найти: \n' + '\n '.join(result),
+                                    'text' : 'Какой вес у упаковки? Есть \n' + ', '.join(weight),
+                                    'end_session': False
+                                    },    
+                                    "application_state": {
+                                    "value": current_Lst
+                                    },            
+                                    'version': '1.0'
+                                }
+                            elif len(ready) > 1:
+                                return {
+                                'response' : {
+                                    'text' : 'Какая готовность у смеси? Есть \n' + ', '.join(count),
                                     'end_session': False
                                     },    
                                     "application_state": {
@@ -482,9 +572,10 @@ def text_search(text, lst, current_Lst):
             result = []
             for title in current_Lst:
                 result.append(title)
+            
             response_text = {
             'response' : {
-                'text' : 'Вот что удалось найти: \n' + '\n'.join(result),
+                'text' : 'Вот что удалось найти: \n' + '\n'.join(result) + '\n Заказываем?',
                 'end_session': False
                 },
                 "application_state": {
